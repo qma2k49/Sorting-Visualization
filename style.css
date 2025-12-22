@@ -1,0 +1,300 @@
+/* --- GLOBAL STYLES & TYPOGRAPHY --- */
+body {
+    font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #f0f3f5; /* Nền sáng, nhẹ nhàng */
+    color: #333;
+    padding: 20px;
+}
+
+.container {
+    max-width: 1300px;
+    margin: 30px auto;
+    background-color: #ffffff;
+    padding: 30px 40px;
+    border-radius: 16px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08); /* Shadow mềm mại */
+}
+
+h1 {
+    text-align: center;
+    color: #004d99; /* Màu xanh đậm hơn, chuyên nghiệp */
+    font-size: 2.5em;
+    font-weight: 700;
+}
+
+hr {
+    margin: 25px 0;
+    border: 0;
+    border-top: 1px solid #e0e0e0;
+}
+
+/* --- CONTROLS SECTION --- */
+.controls {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 20px;
+    margin-bottom: 25px;
+    padding: 15px;
+    background-color: #f9f9f9;
+    border-radius: 12px;
+}
+
+.control-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    flex-grow: 1; /* Cho phép các nhóm control mở rộng */
+}
+
+.control-group label {
+    font-weight: 600;
+    color: #555;
+    font-size: 0.95em;
+}
+
+.control-group.input-manual {
+    flex-direction: row;
+    align-items: center;
+    width: 100%; /* Chiếm toàn bộ chiều rộng */
+    gap: 15px;
+}
+
+#manual-array-input {
+    flex-grow: 1;
+    padding: 12px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    font-size: 1em;
+}
+
+select, button, input[type="range"] {
+    padding: 12px 15px;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+    font-size: 1em;
+    transition: all 0.2s;
+}
+
+button {
+    cursor: pointer;
+    background-color: #007bff;
+    color: white;
+    font-weight: 600;
+    border: none;
+}
+button:hover:not(:disabled) {
+    background-color: #0056b3;
+    box-shadow: 0 4px 8px rgba(0, 86, 179, 0.2);
+}
+button:disabled {
+    background-color: #a0a0a0;
+    cursor: not-allowed;
+}
+
+#start-btn {
+    background-color: #dc3545; /* Đỏ để nổi bật lệnh hành động chính */
+    width: auto;
+}
+#start-btn:hover:not(:disabled) {
+    background-color: #c82333;
+    box-shadow: 0 4px 8px rgba(200, 35, 51, 0.2);
+}
+
+/* --- VISUALIZATION SECTION (KHỐI HÌNH) --- */
+.visualization-container {
+    display: flex;
+    justify-content: center;
+    align-items: center; /* Đảm bảo các khối không bị dính sát trên cùng */
+    min-height: 150px; 
+    border: 2px solid #e0e0e0;
+    background-color: #fcfcfc;
+    padding: 20px 10px;
+    border-radius: 12px;
+    flex-wrap: wrap; 
+}
+
+.bar {
+    /* Khối hình vuông */
+    width: 60px; 
+    height: 60px;
+    line-height: 60px; 
+    text-align: center;
+    font-size: 1.1em;
+    font-weight: 700;
+    color: #ffffff;
+    background-color: #3f51b5; /* Màu xanh Navy đậm */
+    margin: 6px;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    border: 2px solid rgba(255, 255, 255, 0.7); /* Viền sáng */
+    
+    /* Transition cho chuyển động order mượt mà */
+    transition: background-color 0.2s ease, transform 0.2s ease, order 0.3s ease; 
+}
+
+/* --- TRẠNG THÁI MÀU SẮC (SỬ DỤNG CONTRAST CAO) --- */
+.bar.comparing { 
+    background-color: #ffc107; /* Vàng sáng */
+    color: #333; 
+    transform: scale(1.05); /* Hiệu ứng phồng lên khi so sánh */
+} 
+.bar.swapping { 
+    background-color: #e91e63; /* Hồng rực: Đang hoán đổi */
+    transform: rotate(5deg);
+}  
+.bar.sorted { 
+    background-color: #4caf50; /* Xanh lá: Đã sắp xếp */
+    transform: scale(0.95);
+}    
+.bar.pivot { 
+    background-color: #ff9800; /* Cam: Thanh đang chèn/Pivot */
+    box-shadow: 0 0 15px rgba(255, 152, 0, 0.8);
+}
+
+/* Initial message */
+#initial-message {
+    position: static; 
+    color: #a0a0a0;
+    font-style: italic;
+    font-size: 1.2em;
+}
+
+/* --- STATUS LOG --- */
+.status-log {
+    text-align: center;
+    padding: 15px;
+    margin-top: 20px;
+    border-radius: 10px;
+    background-color: #e8f5e9; /* Nền nhẹ cho log thành công */
+    color: #2e7d32;
+    font-weight: 600;
+}
+
+.bar.splitting {
+    background-color: #9c27b0; /* Màu tím: Biểu thị giai đoạn chia (Divide) */
+    box-shadow: 0 0 10px rgba(156, 39, 176, 0.6);
+}
+
+.heap-container {
+    display: none; /* Ẩn ban đầu */
+    position: relative;
+    width: 100%;
+    height: 400px; /* Chiều cao cố định cho cây */
+    border: 2px solid #e0e0e0;
+    background-color: #fafafa;
+    border-radius: 12px;
+    margin-top: 20px;
+    overflow: hidden; /* Ẩn phần tràn nếu cây quá lớn */
+    display: flex;
+    justify-content: center;
+}
+
+/* Nút tròn trên cây */
+.tree-node {
+    position: absolute;
+    width: 40px;
+    height: 40px;
+    line-height: 40px;
+    border-radius: 50%;
+    background-color: #3f51b5; /* Màu gốc giống thanh bar */
+    color: white;
+    font-weight: bold;
+    text-align: center;
+    z-index: 2; /* Nổi lên trên đường nối */
+    transition: background-color 0.2s ease, transform 0.2s ease;
+    border: 2px solid white;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+
+/* Các trạng thái màu sắc cho Tree Node (Đồng bộ với Bar) */
+.tree-node.comparing {
+    background-color: #ffc107; /* Vàng */
+    transform: scale(1.2);
+}
+.tree-node.swapping {
+    background-color: #e91e63; /* Hồng */
+}
+.tree-node.sorted {
+    background-color: #4caf50; /* Xanh lá */
+    opacity: 0.5; /* Làm mờ một chút vì nó đã bị loại khỏi heap */
+}
+.tree-node.pivot {
+    background-color: #ff9800; /* Cam */
+}
+
+/* Đường nối (Edges) dùng SVG */
+svg.tree-lines {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1; /* Nằm dưới các node */
+}
+
+line.edge {
+    stroke: #aaa;
+    stroke-width: 2;
+    transition: stroke 0.2s;
+}
+
+#heap-title {
+    display: none; /* Ẩn mặc định */
+    text-align: center; /* Căn giữa cho đẹp (tuỳ chọn) */
+    margin-top: 30px;
+}
+
+.merge-node-container {
+    position: absolute;
+    display: flex;
+    justify-content: center;
+    background: white;
+    border: 1px solid #333;
+    padding: 2px;
+    border-radius: 4px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    transition: all 0.3s ease;
+    z-index: 2;
+}
+
+/* Từng ô số bên trong mảng con */
+.merge-node-item {
+    width: 25px;
+    height: 25px;
+    line-height: 25px;
+    text-align: center;
+    border: 1px solid #eee;
+    margin: 0 1px;
+    font-size: 0.8em;
+    background-color: #f3e5f5; /* Tím rất nhạt */
+}
+
+/* Màu sắc trạng thái cho item trong cây Merge */
+.merge-node-item.sorted {
+    background-color: #c8e6c9; /* Xanh lá nhạt - Đã trộn xong */
+    font-weight: bold;
+    border-color: #4caf50;
+}
+
+.merge-node-item.pivot-tree {
+    background-color: #ff9800; /* Cam đậm */
+    color: white;
+    font-weight: bold;
+    border-color: #e65100;
+    transform: scale(1.1);
+    box-shadow: 0 0 5px rgba(255, 152, 0, 0.5);
+}
+
+/* Phần tử bình thường trong Quick Sort (màu xanh nhẹ) */
+.merge-node-item.qs-normal {
+    background-color: #e3f2fd; 
+}
+
+.tree-arrow {
+    stroke: #555;          /* Màu xám đậm */
+    stroke-width: 2;
+    fill: none;            /* Không tô màu bên trong */
+    z-index: 1;            /* Nằm dưới các node */
+}
