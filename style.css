@@ -242,7 +242,6 @@ line.edge {
 
 #heap-title {
     display: none; /* Ẩn mặc định */
-    text-align: center; /* Căn giữa cho đẹp (tuỳ chọn) */
     margin-top: 30px;
 }
 

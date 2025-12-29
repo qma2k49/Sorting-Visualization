@@ -64,7 +64,7 @@ function toggleAuxView() {
 
     if (algo === 'heap') {
         // Cấu hình cho Heap Sort
-        heapTitle.textContent = "Biểu diễn Cây Nhị Phân (Binary Heap)";
+        heapTitle.textContent = "Cây vun đống";
         heapTitle.style.display = 'block';
         heapContainer.style.display = 'flex';
 
@@ -73,7 +73,7 @@ function toggleAuxView() {
     }
     else if (algo === 'merge') {
         // Cấu hình cho Merge Sort
-        heapTitle.textContent = "Cây Đệ Quy (Merge Sort Tree)";
+        heapTitle.textContent = "Cây Đệ Quy";
         heapTitle.style.display = 'block';
         heapContainer.style.display = 'flex';
 
@@ -81,7 +81,7 @@ function toggleAuxView() {
         drawMergeNode(array, 0, array.length - 1, 0, false);
     }
     else if (algo === 'quick') {
-        heapTitle.textContent = "Cây Đệ Quy (Quick Sort Tree)";
+        heapTitle.textContent = "Cây Đệ Quy";
         heapTitle.style.display = 'block';
         heapContainer.style.display = 'flex';
         // Vẽ node gốc ban đầu
