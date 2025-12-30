@@ -137,7 +137,7 @@ button:disabled {
 /* --- TRẠNG THÁI MÀU SẮC (SỬ DỤNG CONTRAST CAO) --- */
 .bar.comparing { 
     background-color: #ffc107; /* Vàng sáng */
-    color: #333; 
+    color: #ffffff !important;
     transform: scale(1.05); /* Hiệu ứng phồng lên khi so sánh */
 } 
 .bar.swapping { 
@@ -146,6 +146,7 @@ button:disabled {
 }  
 .bar.sorted { 
     background-color: #4caf50; /* Xanh lá: Đã sắp xếp */
+    color: #ffffff !important;
     transform: scale(0.95);
 }    
 .bar.pivot { 
@@ -296,4 +297,10 @@ line.edge {
     stroke-width: 2;
     fill: none;            /* Không tô màu bên trong */
     z-index: 1;            /* Nằm dưới các node */
+}
+.bar.swapping { 
+    background-color: #ff4d4d; /* Màu đỏ tươi để đồng nhất trạng thái hoán đổi */
+    color: #ffffff !important;
+    transform: scale(1.1);
+    z-index: 2;
 }

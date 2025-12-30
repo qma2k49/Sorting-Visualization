@@ -425,46 +425,35 @@ async function selectionSort() {
     markSorted(n - 1);
 }
 
+// script.js
 async function insertionSort() {
     const n = array.length;
+
+    // Phần tử đầu tiên (index 0) được coi là đã sắp xếp
     markSorted(0);
+
     for (let i = 1; i < n; i++) {
-        let key = array[i];
-        let j = i - 1;
+        let j = i;
 
-        setClasses([i], 'swapping', 'add');
-        await sleep(parseInt(speedInput.value));
+        // Hoán đổi phần tử hiện tại với các phần tử đứng trước nếu nó nhỏ hơn
+        while (j > 0) {
+            // Hiển thị màu vàng khi so sánh
+            await compare(j - 1, j);
 
-        while (j >= 0 && array[j] > key) {
-            await compare(j, j + 1);
-
-            array[j + 1] = array[j];
-
-            // Cập nhật DOM thủ công cho insertion vì nó là shift chứ không phải swap thuần
-            arrayElements[j + 1].textContent = array[j + 1];
-            if (heapNodes[j + 1]) heapNodes[j + 1].textContent = array[j + 1];
-
-            // Hiệu ứng shift
-            setClasses([j, j + 1], 'swapping', 'add');
-            await sleep(parseInt(speedInput.value));
-            setClasses([j], 'swapping', 'remove');
-
-            // Tạm thời coi j+1 là đã sắp xếp (thuộc vùng sorted)
-            markSorted(j + 1);
-
-            j = j - 1;
+            if (array[j - 1] > array[j]) {
+                // Hiển thị màu đỏ và hoán đổi vị trí (giống Bubble/Selection Sort)
+                await swap(j - 1, j);
+                j--;
+            } else {
+                // Nếu đã đứng sau một phần tử nhỏ hơn, dừng lại vì đã đúng vị trí
+                break;
+            }
         }
-        array[j + 1] = key;
 
-        arrayElements[j + 1].textContent = key;
-        if (heapNodes[j + 1]) heapNodes[j + 1].textContent = key;
-
-        setClasses([i, j + 1], 'swapping', 'remove');
-        markSorted(j + 1);
-
-        // Refresh vùng sorted
-        for (let k = 0; k <= i; k++) markSorted(k);
-        await sleep(parseInt(speedInput.value));
+        // Sau mỗi lần chèn xong một phần tử, cập nhật trạng thái xanh lá cho vùng đã xong
+        for (let k = 0; k <= i; k++) {
+            markSorted(k);
+        }
     }
 }
 
@@ -669,16 +658,51 @@ function drawQuickNode(currentArr, l, r, pivotIndex, depth, parentId = null) {
 function updateQuickNodePivot(l, r, pivotIndex) {
     const node = document.getElementById(`quick-node-${l}-${r}`);
     if (node) {
-        // Duyệt qua các con của node DOM này để tìm ô chứa Pivot
         const children = node.children;
-        const relativePivotIndex = pivotIndex - l; // Vị trí pivot tương đối trong node
+        // Duyệt qua từng phần tử trong node DOM
+        for (let i = 0; i < children.length; i++) {
+            const actualIndex = l + i; // Chỉ số thực tế trong mảng chính
+            
+            // 1. Cập nhật lại giá trị số (Đảm bảo đồng bộ sau khi partition đã swap)
+            children[i].textContent = array[actualIndex];
 
-        if (children[relativePivotIndex]) {
-            children[relativePivotIndex].classList.remove('qs-normal');
-            children[relativePivotIndex].classList.add('pivot-tree');
+            // 2. Xử lý màu sắc: Pivot màu cam, còn lại là màu xanh nhẹ (qs-normal)
+            children[i].classList.remove('qs-normal', 'pivot-tree', 'sorted');
+            if (actualIndex === pivotIndex) {
+                children[i].classList.add('pivot-tree');
+            } else {
+                children[i].classList.add('qs-normal');
+            }
         }
     }
 }
+
+// Cập nhật Node cây sau khi mảng con tại đó đã hoàn tất sắp xếp
+async function updateQuickNodeSorted(l, r, sortedSlice, pivotIndex) {
+    const node = document.getElementById(`quick-node-${l}-${r}`);
+    if (node) {
+        const children = node.children;
+        for (let i = 0; i < children.length; i++) {
+            const actualIndex = l + i;
+            
+            // Đồng bộ giá trị cuối cùng
+            children[i].textContent = array[actualIndex];
+
+            // Tô xanh nếu không phải là Pivot
+            children[i].classList.remove('qs-normal');
+            if (actualIndex === pivotIndex) {
+                children[i].classList.add('pivot-tree');
+            } else {
+                children[i].classList.add('sorted');
+            }
+        }
+        // Hiệu ứng hoàn tất
+        node.style.transform = "translateX(-50%) scale(1.05)";
+        await sleep(100);
+        node.style.transform = "translateX(-50%) scale(1)";
+    }
+}
+
 
 async function quickSort() {
     const speed = parseInt(speedInput.value);
@@ -718,53 +742,37 @@ async function quickSort() {
 
     async function quickSortRecursive(arr, low, high, depth) {
         if (low > high) return;
+    const speed = parseInt(speedInput.value);
 
-        // --- BƯỚC 1: VẼ NODE CÂY (TRẠNG THÁI HIỆN TẠI) ---
-        // Lúc này chưa biết Pivot ở đâu, vẽ mảng bình thường
-        if (algorithmSelect.value === 'quick') {
-            // Lấy lát cắt mảng hiện tại để vẽ
-            const currentSlice = arr.slice(low, high + 1);
-            drawQuickNode(currentSlice, low, high, -1, depth);
-            await sleep(speed);
-        }
+    // 1. Vẽ Node ban đầu
+    if (algorithmSelect.value === 'quick') {
+        drawQuickNode(arr.slice(low, high + 1), low, high, -1, depth);
+        await sleep(speed);
+    }
 
-        // --- BƯỚC 2: PHÂN HOẠCH (PARTITION) ---
-        // Pivot thật sự (pi) được xác định sau bước này
-        let pi = 0;
-        if (low < high) {
-            pi = await partition(arr, low, high);
-        } else {
-            // Trường hợp chỉ còn 1 phần tử
-            pi = low;
-            markSorted(low);
-        }
+    let pi = low;
+    if (low < high) {
+        // 2. Phân hoạch (Đây là lúc mảng bị thay đổi giá trị)
+        pi = await partition(arr, low, high);
 
-        // --- BƯỚC 3: CẬP NHẬT CÂY (TÔ MÀU PIVOT) ---
-        // Sau khi partition, phần tử tại vị trí pi chính là Pivot
+        // 3. ĐỒNG BỘ: Cập nhật lại Node cây để khớp với mảng sau khi swap
         if (algorithmSelect.value === 'quick') {
             updateQuickNodePivot(low, high, pi);
-
-            // Cập nhật lại nội dung các số trong node trên cây 
-            // (vì hàm partition đã swap các phần tử lung tung)
-            const node = document.getElementById(`quick-node-${low}-${high}`);
-            if (node) {
-                const currentSliceAfterPartition = arr.slice(low, high + 1);
-                const children = node.children;
-                for (let k = 0; k < currentSliceAfterPartition.length; k++) {
-                    children[k].textContent = currentSliceAfterPartition[k];
-                }
-            }
             await sleep(speed);
         }
 
-        // --- BƯỚC 4: ĐỆ QUY ---
-        // Chỉ đệ quy nếu khoảng index hợp lệ
-        if (low < pi) {
-            await quickSortRecursive(arr, low, pi - 1, depth + 1);
-        }
-        if (pi < high) {
-            await quickSortRecursive(arr, pi + 1, high, depth + 1);
-        }
+        // 4. Đệ quy
+        await quickSortRecursive(arr, low, pi - 1, depth + 1);
+        await quickSortRecursive(arr, pi + 1, high, depth + 1);
+    } else {
+        markSorted(low);
+        pi = low;
+    }
+
+    // 5. Kết thúc mảng con: Tô xanh lá giống Merge Sort
+    if (algorithmSelect.value === 'quick') {
+        await updateQuickNodeSorted(low, high, pi);
+    }
     }
 
     // Bắt đầu
