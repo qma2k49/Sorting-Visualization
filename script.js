@@ -30,7 +30,7 @@ function togglePause() {
     if (isPaused) {
         pauseBtn.textContent = "TIẾP TỤC";
         pauseBtn.classList.add('resuming');
-        statusLog.textContent = "⏸️ ĐÃ ĐÓNG BĂNG - Mọi trạng thái đang giữ nguyên...";
+        statusLog.textContent = "⏸️ Đang tạm dừng...";
     } else {
         pauseBtn.textContent = "TẠM DỪNG";
         pauseBtn.classList.remove('resuming');
