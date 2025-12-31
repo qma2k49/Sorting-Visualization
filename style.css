@@ -304,3 +304,17 @@ line.edge {
     transform: scale(1.1);
     z-index: 2;
 }
+
+/* Thêm vào cuối file style.css */
+#pause-btn {
+    background-color: #ff9800; /* Màu cam */
+    margin-left: 5px;
+}
+
+#pause-btn:hover:not(:disabled) {
+    background-color: #e68a00;
+}
+
+#pause-btn.resuming {
+    background-color: #4caf50; /* Đổi sang xanh lá khi đang ở trạng thái chờ Tiếp tục */
+}

@@ -11,15 +11,39 @@ let array = [];
 let arrayElements = []; // DOM elements cho Mảng (Thanh chữ nhật)
 let heapNodes = [];     // DOM elements cho Cây (Hình tròn)
 let isSorting = false;
+let isPaused = false;
 
 const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 const algorithmSelect = document.getElementById('algorithm-select');
 const heapTitle = document.getElementById('heap-title');
+const pauseBtn = document.getElementById('pause-btn');
 let drawTimeout;
 
 speedInput.addEventListener('input', () => {
     speedValueSpan.textContent = speedInput.value;
 });
+
+function togglePause() {
+    if (!isSorting) return;
+    isPaused = !isPaused;
+
+    if (isPaused) {
+        pauseBtn.textContent = "TIẾP TỤC";
+        pauseBtn.classList.add('resuming');
+        statusLog.textContent = "⏸️ ĐÃ ĐÓNG BĂNG - Mọi trạng thái đang giữ nguyên...";
+    } else {
+        pauseBtn.textContent = "TẠM DỪNG";
+        pauseBtn.classList.remove('resuming');
+        statusLog.textContent = "▶️ Đang tiếp tục...";
+    }
+}
+
+// Hàm quan trọng nhất: Đợi nếu đang bị tạm dừng
+async function checkPause() {
+    while (isPaused) {
+        await new Promise(resolve => setTimeout(resolve, 50));
+    }
+}
 
 function toggleAuxView() {
     // Nếu chưa có mảng, luôn ẩn tất cả
@@ -155,59 +179,54 @@ algorithmSelect.addEventListener('change', () => {
 
 // 1. Hoán đổi (Swap) - Đồng bộ nội dung số và màu sắc
 async function swap(i, j) {
+    await checkPause(); // <--- ĐỢI NẾU TẠM DỪNG
     const speed = parseInt(speedInput.value);
 
-    // Highlight swapping (Hồng)
     setClasses([i, j], 'swapping', 'add');
     await sleep(speed);
+    await checkPause(); // <--- KIỂM TRA LẠI SAU KHI NGỦ
 
-    // Logic đổi giá trị trong bộ nhớ
     [array[i], array[j]] = [array[j], array[i]];
-
-    // Cập nhật DOM MẢNG
     arrayElements[i].textContent = array[i];
     arrayElements[j].textContent = array[j];
-
-    // Cập nhật DOM CÂY (Chỉ đổi số, vị trí node giữ nguyên)
     if (heapNodes[i]) heapNodes[i].textContent = array[i];
     if (heapNodes[j]) heapNodes[j].textContent = array[j];
 
-    // Bỏ highlight
     await sleep(speed);
+    await checkPause();
     setClasses([i, j], 'swapping', 'remove');
 }
 
 // 2. So sánh (Compare) - Đồng bộ màu vàng
 async function compare(i, j) {
+    await checkPause(); // <--- ĐỢI NẾU TẠM DỪNG
     const speed = parseInt(speedInput.value);
     setClasses([i, j], 'comparing', 'add');
     await sleep(speed);
+    await checkPause(); // <--- ĐỢI NẾU TẠM DỪNG
     setClasses([i, j], 'comparing', 'remove');
 }
 
 // 3. Cập nhật giá trị (Update Value - dùng cho Merge Sort)
 async function updateValue(index, value, color) {
+    await checkPause(); // <--- ĐỢI NẾU TẠM DỪNG
     const speed = parseInt(speedInput.value);
     array[index] = value;
-
-    // Mảng
     arrayElements[index].textContent = value;
     arrayElements[index].classList.add(color);
-
-    // Cây
     if (heapNodes[index]) {
         heapNodes[index].textContent = value;
         heapNodes[index].classList.add(color);
     }
-
     await sleep(speed);
-
+    await checkPause(); // <--- ĐỢI NẾU TẠM DỪNG
     arrayElements[index].classList.remove(color);
     if (heapNodes[index]) heapNodes[index].classList.remove(color);
 }
 
 // 4. Đánh dấu đã sắp xếp (Sorted) - Đồng bộ màu xanh
-function markSorted(index) {
+async function markSorted(index) {
+    await checkPause(); // Dừng tại đây nếu bấm Pause trước khi kịp tô xanh
     if (arrayElements[index]) arrayElements[index].classList.add('sorted');
     if (heapNodes[index]) heapNodes[index].classList.add('sorted');
 }
@@ -283,6 +302,10 @@ algorithmSelect.addEventListener('change', toggleAuxView);
 // --- LOGIC NHẬP/HIỂN THỊ DỮ LIỆU ---
 
 function displayArray(newArray) {
+    isPaused = false;
+    pauseBtn.disabled = true;
+    pauseBtn.textContent = "TẠM DỪNG";
+
     array = newArray;
     vizContainer.innerHTML = '';
     arrayElements = [];
@@ -356,6 +379,7 @@ async function heapSort() {
     const n = array.length;
 
     async function heapify(n, i) {
+        await checkPause();
         let largest = i;
         let l = 2 * i + 1;
         let r = 2 * i + 2;
@@ -496,20 +520,21 @@ function drawMergeNode(subArray, l, r, depth, isSorted = false, parentId = null)
 }
 
 // Cập nhật nội dung node (thành màu xanh) sau khi đã merge
-function updateMergeNode(l, r, newSortedArray) {
+async function updateMergeNode(l, r, newSortedArray) {
+    await checkPause(); // Chặn lại nếu đang pause, không cho phép cập nhật mảng con lên xanh lá
     const node = document.getElementById(`merge-node-${l}-${r}`);
     if (node) {
-        node.innerHTML = ''; // Xóa nội dung cũ
+        node.innerHTML = '';
         newSortedArray.forEach(val => {
             const item = document.createElement('div');
-            item.classList.add('merge-node-item', 'sorted'); // Thêm class sorted (xanh)
+            item.classList.add('merge-node-item', 'sorted');
             item.textContent = val;
             node.appendChild(item);
         });
-        // Hiệu ứng scale nhẹ để báo hiệu vừa update
-        node.style.transition = "transform 0.2s";
+        // Hiệu ứng chuyển động cũng phải chờ
         node.style.transform = "translateX(-50%) scale(1.1)";
-        setTimeout(() => node.style.transform = "translateX(-50%) scale(1)", 200);
+        await sleep(200);
+        node.style.transform = "translateX(-50%) scale(1)";
     }
 }
 
@@ -534,6 +559,7 @@ async function mergeSort() {
         let mergedSubArray = []; // Mảng tạm để vẽ lên cây
 
         while (i < n1 && j < n2) {
+            await checkPause();
             // Visual trên thanh Bar chính
             arrayElements[k].classList.add('comparing');
             await sleep(speed / 2);
@@ -548,6 +574,7 @@ async function mergeSort() {
                 j++;
             }
             // Update Bar chính
+            await checkPause();
             arrayElements[k].textContent = arr[k];
             arrayElements[k].classList.remove('comparing');
             arrayElements[k].classList.add('sorted');
@@ -555,6 +582,7 @@ async function mergeSort() {
         }
 
         while (i < n1) {
+            await checkPause();
             arr[k] = L[i];
             mergedSubArray.push(L[i]);
             arrayElements[k].textContent = arr[k];
@@ -562,6 +590,7 @@ async function mergeSort() {
             i++; k++;
         }
         while (j < n2) {
+            await checkPause();
             arr[k] = R[j];
             mergedSubArray.push(R[j]);
             arrayElements[k].textContent = arr[k];
@@ -573,13 +602,15 @@ async function mergeSort() {
 
         // VISUAL TREE: Cập nhật node cha (đã sắp xếp)
         // Đây là bước "Trị" (Conquer) - hiển thị kết quả gộp
-        updateMergeNode(l, r, mergedSubArray);
+        await updateMergeNode(l, r, mergedSubArray);
     }
 
     // Thêm tham số parentId
     async function mergeSortRecursive(arr, l, r, depth, parentId = null) {
+        await checkPause();
         if (l >= r) {
             if (algorithmSelect.value === 'merge') {
+                await checkPause();
                 // Base case: Vẽ và truyền parentId xuống
                 drawMergeNode([arr[l]], l, r, depth, false, parentId);
                 await sleep(speed);
@@ -593,9 +624,10 @@ async function mergeSort() {
         const currentId = `merge-node-${l}-${r}`;
 
         if (algorithmSelect.value === 'merge') {
+            await checkPause();
             // Vẽ node này, nối với parentId (nếu có)
             drawMergeNode(currentSub, l, r, depth, false, parentId);
-            await sleep(speed);
+            await sleep(speedInput.value);
         }
 
         let m = l + parseInt((r - l) / 2);
@@ -655,18 +687,14 @@ function drawQuickNode(currentArr, l, r, pivotIndex, depth, parentId = null) {
 }
 
 // Hàm cập nhật Node (dùng để tô màu Pivot sau khi Partition xong)
-function updateQuickNodePivot(l, r, pivotIndex) {
+async function updateQuickNodePivot(l, r, pivotIndex) {
+    await checkPause(); // Đóng băng trước khi cập nhật cây
     const node = document.getElementById(`quick-node-${l}-${r}`);
     if (node) {
         const children = node.children;
-        // Duyệt qua từng phần tử trong node DOM
         for (let i = 0; i < children.length; i++) {
-            const actualIndex = l + i; // Chỉ số thực tế trong mảng chính
-            
-            // 1. Cập nhật lại giá trị số (Đảm bảo đồng bộ sau khi partition đã swap)
+            const actualIndex = l + i;
             children[i].textContent = array[actualIndex];
-
-            // 2. Xử lý màu sắc: Pivot màu cam, còn lại là màu xanh nhẹ (qs-normal)
             children[i].classList.remove('qs-normal', 'pivot-tree', 'sorted');
             if (actualIndex === pivotIndex) {
                 children[i].classList.add('pivot-tree');
@@ -678,17 +706,14 @@ function updateQuickNodePivot(l, r, pivotIndex) {
 }
 
 // Cập nhật Node cây sau khi mảng con tại đó đã hoàn tất sắp xếp
-async function updateQuickNodeSorted(l, r, sortedSlice, pivotIndex) {
+async function updateQuickNodeSorted(l, r, pivotIndex) {
+    await checkPause(); // Đóng băng trước khi tô xanh cây
     const node = document.getElementById(`quick-node-${l}-${r}`);
     if (node) {
         const children = node.children;
         for (let i = 0; i < children.length; i++) {
             const actualIndex = l + i;
-            
-            // Đồng bộ giá trị cuối cùng
             children[i].textContent = array[actualIndex];
-
-            // Tô xanh nếu không phải là Pivot
             children[i].classList.remove('qs-normal');
             if (actualIndex === pivotIndex) {
                 children[i].classList.add('pivot-tree');
@@ -696,10 +721,6 @@ async function updateQuickNodeSorted(l, r, sortedSlice, pivotIndex) {
                 children[i].classList.add('sorted');
             }
         }
-        // Hiệu ứng hoàn tất
-        node.style.transform = "translateX(-50%) scale(1.05)";
-        await sleep(100);
-        node.style.transform = "translateX(-50%) scale(1)";
     }
 }
 
@@ -715,64 +736,57 @@ async function quickSort() {
     async function partition(arr, low, high) {
         let pivotValue = arr[high];
 
-        // Visual trên Bar: Pivot màu cam
+        await checkPause(); // Chặn trước khi tô màu cam cho Pivot trên Bar
         setClasses([high], 'pivot', 'add');
-        await sleep(speed);
+        await sleep(parseInt(speedInput.value));
 
         let i = (low - 1);
-
         for (let j = low; j <= high - 1; j++) {
-            // Visual Bar: So sánh
-            await compare(j, high);
-
+            await compare(j, high); // Hàm compare đã có checkPause bên trong
             if (arr[j] < pivotValue) {
                 i++;
-                await swap(i, j);
+                await swap(i, j); // Hàm swap đã có checkPause bên trong
             }
         }
 
+        await checkPause();
         setClasses([high], 'pivot', 'remove');
         await swap(i + 1, high);
 
-        // Pivot về đúng chỗ -> Tô xanh trên Bar
-        markSorted(i + 1);
-
-        return (i + 1); // Trả về chỉ số Pivot
+        await markSorted(i + 1); // Đợi để tô xanh Pivot trên Bar
+        return (i + 1);
     }
 
     async function quickSortRecursive(arr, low, high, depth) {
         if (low > high) return;
-    const speed = parseInt(speedInput.value);
+        await checkPause();
 
-    // 1. Vẽ Node ban đầu
-    if (algorithmSelect.value === 'quick') {
-        drawQuickNode(arr.slice(low, high + 1), low, high, -1, depth);
-        await sleep(speed);
-    }
-
-    let pi = low;
-    if (low < high) {
-        // 2. Phân hoạch (Đây là lúc mảng bị thay đổi giá trị)
-        pi = await partition(arr, low, high);
-
-        // 3. ĐỒNG BỘ: Cập nhật lại Node cây để khớp với mảng sau khi swap
         if (algorithmSelect.value === 'quick') {
-            updateQuickNodePivot(low, high, pi);
-            await sleep(speed);
+            // Đóng băng trước khi vẽ Node mới lên cây
+            await checkPause();
+            drawQuickNode(arr.slice(low, high + 1), low, high, -1, depth);
+            await sleep(parseInt(speedInput.value));
         }
 
-        // 4. Đệ quy
-        await quickSortRecursive(arr, low, pi - 1, depth + 1);
-        await quickSortRecursive(arr, pi + 1, high, depth + 1);
-    } else {
-        markSorted(low);
-        pi = low;
-    }
+        let pi = low;
+        if (low < high) {
+            pi = await partition(arr, low, high);
 
-    // 5. Kết thúc mảng con: Tô xanh lá giống Merge Sort
-    if (algorithmSelect.value === 'quick') {
-        await updateQuickNodeSorted(low, high, pi);
-    }
+            if (algorithmSelect.value === 'quick') {
+                await updateQuickNodePivot(low, high, pi); // Đã có checkPause bên trong
+                await sleep(parseInt(speedInput.value));
+            }
+
+            await quickSortRecursive(arr, low, pi - 1, depth + 1);
+            await quickSortRecursive(arr, pi + 1, high, depth + 1);
+        } else {
+            await markSorted(low);
+            pi = low;
+        }
+
+        if (algorithmSelect.value === 'quick') {
+            await updateQuickNodeSorted(low, high, pi); // Đã có checkPause bên trong
+        }
     }
 
     // Bắt đầu
@@ -786,7 +800,10 @@ async function quickSort() {
 function startSorting() {
     if (isSorting || array.length === 0) return;
     isSorting = true;
+    isPaused = false;
     startBtn.disabled = true;
+    pauseBtn.disabled = false;
+    pauseBtn.textContent = "TẠM DỪNG";
 
     // Reset màu
     document.querySelectorAll('.bar, .tree-node').forEach(el =>
@@ -808,7 +825,9 @@ function startSorting() {
 
     sortFunction().then(() => {
         isSorting = false;
+        isPaused = false;
         startBtn.disabled = false;
+        pauseBtn.disabled = true;
         statusLog.textContent = `✅ Hoàn tất!`;
         // Tô xanh tất cả khi xong
         for (let k = 0; k < array.length; k++) markSorted(k);
