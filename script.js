@@ -30,11 +30,11 @@ function togglePause() {
     if (isPaused) {
         pauseBtn.textContent = "TIẾP TỤC";
         pauseBtn.classList.add('resuming');
-        statusLog.textContent = "⏸️ Đang tạm dừng...";
+        statusLog.textContent = "Đang tạm dừng...";
     } else {
         pauseBtn.textContent = "TẠM DỪNG";
         pauseBtn.classList.remove('resuming');
-        statusLog.textContent = "▶️ Đang tiếp tục...";
+        statusLog.textContent = "Đang chạy thuật toán...";
     }
 }
 
@@ -811,7 +811,7 @@ function startSorting() {
     );
 
     const algorithm = document.getElementById('algorithm-select').value;
-    statusLog.textContent = `Đang chạy: ${document.getElementById('algorithm-select').options[document.getElementById('algorithm-select').selectedIndex].text}`;
+    statusLog.textContent = `Đang chạy thuật toán...`;
 
     let sortFunction;
     switch (algorithm) {
