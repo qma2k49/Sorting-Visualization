@@ -538,6 +538,7 @@ async function updateMergeNode(l, r, newSortedArray) {
     }
 }
 
+// Thay thế toàn bộ hàm mergeSort bằng đoạn code này
 async function mergeSort() {
     const speed = parseInt(speedInput.value);
 
@@ -546,103 +547,124 @@ async function mergeSort() {
         heapContainer.innerHTML = '';
     }
 
+    // Hàm trộn (Merge) với logic visual mới
     async function merge(arr, l, m, r) {
         let n1 = m - l + 1;
         let n2 = r - m;
         let L = new Array(n1);
         let R = new Array(n2);
 
+        // Sao chép dữ liệu sang mảng tạm
         for (let i = 0; i < n1; i++) L[i] = arr[l + i];
         for (let j = 0; j < n2; j++) R[j] = arr[m + 1 + j];
 
         let i = 0, j = 0, k = l;
-        let mergedSubArray = []; // Mảng tạm để vẽ lên cây
 
-        while (i < n1 && j < n2) {
+        // Lấy Node cây hiện tại để thao tác visual
+        const nodeId = `merge-node-${l}-${r}`;
+        const treeNode = document.getElementById(nodeId);
+        const treeItems = treeNode ? treeNode.children : null;
+
+        // --- HÀM HELPER: Xử lý hiệu ứng ---
+        // Logic: Ô k hiện Vàng (chờ) -> Xử lý ngầm -> Ô k hiện Xanh + Giá trị đúng
+        const performMergeStep = async (val) => {
             await checkPause();
-            // Visual trên thanh Bar chính
-            arrayElements[k].classList.add('comparing');
-            await sleep(speed / 2);
 
+            // 1. TRẠNG THÁI CHỜ (MÀU VÀNG)
+            // Đánh dấu ô đích trên thanh Bar
+            arrayElements[k].classList.add('comparing'); 
+            
+            // Đánh dấu ô đích trên Cây (index trong cây là k - l)
+            if (treeItems && treeItems[k - l]) {
+                treeItems[k - l].classList.add('comparing');
+            }
+
+            // Dừng một chút để người dùng thấy ô màu vàng ("Tôi đang tính toán cho ô này")
+            await sleep(speed);
+
+            // 2. TRẠNG THÁI GHI KẾT QUẢ (MÀU XANH + GIÁ TRỊ)
+            arr[k] = val; // Cập nhật dữ liệu thực
+
+            // Update Bar: Xóa vàng, thêm xanh, cập nhật số
+            arrayElements[k].classList.remove('comparing');
+            arrayElements[k].textContent = val;
+            arrayElements[k].classList.add('sorted');
+
+            // Update Cây: Xóa vàng, thêm xanh, cập nhật số
+            if (treeItems && treeItems[k - l]) {
+                treeItems[k - l].classList.remove('comparing');
+                treeItems[k - l].textContent = val;
+                treeItems[k - l].classList.add('sorted');
+                
+                // Hiệu ứng scale nhẹ để nhấn mạnh việc cập nhật
+                treeItems[k - l].style.transform = "scale(1.2)";
+                setTimeout(() => {
+                   if (treeItems && treeItems[k - l]) treeItems[k - l].style.transform = "scale(1)";
+                }, 200);
+            }
+        };
+
+        // --- VÒNG LẶP CHÍNH ---
+        while (i < n1 && j < n2) {
+            // So sánh ngầm, sau đó gọi hàm hiển thị kết quả
             if (L[i] <= R[j]) {
-                arr[k] = L[i];
-                mergedSubArray.push(L[i]);
+                await performMergeStep(L[i]);
                 i++;
             } else {
-                arr[k] = R[j];
-                mergedSubArray.push(R[j]);
+                await performMergeStep(R[j]);
                 j++;
             }
-            // Update Bar chính
-            await checkPause();
-            arrayElements[k].textContent = arr[k];
-            arrayElements[k].classList.remove('comparing');
-            arrayElements[k].classList.add('sorted');
             k++;
         }
 
+        // --- XỬ LÝ CÁC PHẦN TỬ CÒN DƯ ---
         while (i < n1) {
-            await checkPause();
-            arr[k] = L[i];
-            mergedSubArray.push(L[i]);
-            arrayElements[k].textContent = arr[k];
-            arrayElements[k].classList.add('sorted');
+            await performMergeStep(L[i]);
             i++; k++;
         }
         while (j < n2) {
-            await checkPause();
-            arr[k] = R[j];
-            mergedSubArray.push(R[j]);
-            arrayElements[k].textContent = arr[k];
-            arrayElements[k].classList.add('sorted');
+            await performMergeStep(R[j]);
             j++; k++;
         }
-
-        await sleep(speed);
-
-        // VISUAL TREE: Cập nhật node cha (đã sắp xếp)
-        // Đây là bước "Trị" (Conquer) - hiển thị kết quả gộp
-        await updateMergeNode(l, r, mergedSubArray);
     }
 
-    // Thêm tham số parentId
+    // Hàm đệ quy (Giữ nguyên logic chia để trị)
     async function mergeSortRecursive(arr, l, r, depth, parentId = null) {
         await checkPause();
         if (l >= r) {
             if (algorithmSelect.value === 'merge') {
                 await checkPause();
-                // Base case: Vẽ và truyền parentId xuống
+                // Base case: Vẽ node lá (1 phần tử)
                 drawMergeNode([arr[l]], l, r, depth, false, parentId);
                 await sleep(speed);
             }
             return;
         }
 
-        // Vẽ node hiện tại
+        // Vẽ node hiện tại (chứa mảng con chưa sắp xếp)
         let currentSub = arr.slice(l, r + 1);
-        // Xác định ID của node này (để lát nữa truyền xuống cho con)
         const currentId = `merge-node-${l}-${r}`;
 
         if (algorithmSelect.value === 'merge') {
             await checkPause();
-            // Vẽ node này, nối với parentId (nếu có)
             drawMergeNode(currentSub, l, r, depth, false, parentId);
-            await sleep(speedInput.value);
+            await sleep(speed);
         }
 
         let m = l + parseInt((r - l) / 2);
 
-        // ĐỆ QUY: Truyền currentId làm parentId cho cấp dưới
-        await mergeSortRecursive(arr, l, m, depth + 1, currentId);     // Con trái
-        await mergeSortRecursive(arr, m + 1, r, depth + 1, currentId); // Con phải
+        // Đệ quy xuống con trái và phải
+        await mergeSortRecursive(arr, l, m, depth + 1, currentId);
+        await mergeSortRecursive(arr, m + 1, r, depth + 1, currentId);
 
+        // Gọi hàm trộn với visual mới
         await merge(arr, l, m, r);
     }
 
-    // Gọi lần đầu: parentId = null
+    // Bắt đầu
     await mergeSortRecursive(array, 0, array.length - 1, 0, null);
 
-    // Đảm bảo tô xanh hết khi xong
+    // Quét lại màu xanh lần cuối (phòng trường hợp lag visual)
     for (let k = 0; k < array.length; k++) markSorted(k);
 }
 
