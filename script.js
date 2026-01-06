@@ -520,23 +520,7 @@ function drawMergeNode(subArray, l, r, depth, isSorted = false, parentId = null)
 }
 
 // Cập nhật nội dung node (thành màu xanh) sau khi đã merge
-async function updateMergeNode(l, r, newSortedArray) {
-    await checkPause(); // Chặn lại nếu đang pause, không cho phép cập nhật mảng con lên xanh lá
-    const node = document.getElementById(`merge-node-${l}-${r}`);
-    if (node) {
-        node.innerHTML = '';
-        newSortedArray.forEach(val => {
-            const item = document.createElement('div');
-            item.classList.add('merge-node-item', 'sorted');
-            item.textContent = val;
-            node.appendChild(item);
-        });
-        // Hiệu ứng chuyển động cũng phải chờ
-        node.style.transform = "translateX(-50%) scale(1.1)";
-        await sleep(200);
-        node.style.transform = "translateX(-50%) scale(1)";
-    }
-}
+
 
 // Thay thế toàn bộ hàm mergeSort bằng đoạn code này
 async function mergeSort() {
@@ -582,6 +566,9 @@ async function mergeSort() {
             // Dừng một chút để người dùng thấy ô màu vàng ("Tôi đang tính toán cho ô này")
             await sleep(speed);
 
+            // Kiểm tra tạm dừng sau khi tô vàng
+            await checkPause();
+
             // 2. TRẠNG THÁI GHI KẾT QUẢ (MÀU XANH + GIÁ TRỊ)
             arr[k] = val; // Cập nhật dữ liệu thực
 
@@ -597,7 +584,7 @@ async function mergeSort() {
                 treeItems[k - l].classList.add('sorted');
                 
                 // Hiệu ứng scale nhẹ để nhấn mạnh việc cập nhật
-                treeItems[k - l].style.transform = "scale(1.2)";
+                treeItems[k - l].style.transform = "scale(1)";
                 setTimeout(() => {
                    if (treeItems && treeItems[k - l]) treeItems[k - l].style.transform = "scale(1)";
                 }, 200);
@@ -778,7 +765,6 @@ async function quickSort() {
         await markSorted(i + 1); // Đợi để tô xanh Pivot trên Bar
         return (i + 1);
     }
-
     async function quickSortRecursive(arr, low, high, depth) {
         if (low > high) return;
         await checkPause();

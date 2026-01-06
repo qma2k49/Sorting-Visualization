@@ -138,9 +138,7 @@ button:disabled {
 .bar.comparing { 
     background-color: #ffc107 !important; /* Vàng sáng */
     color: #ffffff !important;
-    transform: scale(1.05); /* Hiệu ứng phồng lên khi so sánh */
-    z-index: 10; /* Đảm bảo khối này nổi lên trên các khối khác */
-    box-shadow: 0 0 10px rgba(255, 193, 7, 0.6);
+    transform: scale(1.0); 
 } 
 .bar.swapping { 
     background-color: #e91e63; /* Hồng rực: Đang hoán đổi */
@@ -214,7 +212,7 @@ button:disabled {
 /* Các trạng thái màu sắc cho Tree Node (Đồng bộ với Bar) */
 .tree-node.comparing {
     background-color: #ffc107; /* Vàng */
-    transform: scale(1.2);
+    transform: scale(1);
 }
 .tree-node.swapping {
     background-color: #e91e63; /* Hồng */
